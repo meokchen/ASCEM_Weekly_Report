@@ -4,7 +4,7 @@ import os
 from fpdf import FPDF
 
 # 1. 網頁配置
-st.set_page_config(page_title="ASCEM 系統維運儀表板", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="ASCEM_IT-工作日誌週報", layout="wide", page_icon="🛡️")
 
 # 2. 標題與標頭
 st.title("🛡️ ASCEM_IT-工作日誌週報儀表板")
@@ -40,7 +40,7 @@ styled_df = df.style.map(highlight_status, subset=['狀態'])
 st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
 # 6. 日常監控總結
-st.subheader("🏛️ Daily Monitor | 日常監控(IT+資安+網管+CyroEM運算)")
+st.subheader("🏛️ Daily Monitor | 日常監控(IT+資安+網管+CryoEM運算)")
 st.info("""
 **本週簡報重點：**
 - **資安合規**：2FA 與 VPN 導入已將外部風險降至最低，NAS 擴充確保了稽核日誌的完整性。
