@@ -37,10 +37,27 @@ st.subheader("📊 系統維運進度追蹤表")
 def highlight_status(val):
     color = '#D4EDDA' if val == '已完備' else '#FFF3CD'
     return f'background-color: {color}'
+'''
+           st.dataframe(df.style.applymap(highlight_status, subset=['狀態']), 
+            use_container_width=True, 
+            hide_index=True)
+'''
+# --- 修正後的表格顯示程式碼 ---
+st.subheader("📊 系統維運進度追蹤表")
 
-st.dataframe(df.style.applymap(highlight_status, subset=['狀態']), 
-             use_container_width=True, 
-             hide_index=True)
+# 檢查 DataFrame 是否有資料
+if not df.empty:
+    # 定義上色邏輯
+    def highlight_status(val):
+        color = 'background-color: #D4EDDA' if val == '已完備' else 'background-color: #FFF3CD'
+        return color
+
+    # 注意：這裡將 applymap 改為 map
+    styled_df = df.style.map(highlight_status, subset=['狀態'])
+    
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+else:
+    st.write("目前尚無資料紀錄。")
 
 # 6. Daily Monitor｜日常監控( IT+資安+網管+CyroEM運算)：
 st.divider()
