@@ -78,43 +78,36 @@ st.sidebar.markdown("[附件 2：資安會議資料](https://csirt.its.sinica.ed
 
 # --- PDF 生成函式 ---
 def create_pdf(dataframe):
+    # 使用支援 Unicode 的新版 FPDF
     pdf = FPDF()
     pdf.add_page()
     
-    # 設定字型 (假設你將字型檔放在專案目錄下，或使用系統路徑)
-    # 這裡先以內建字型示範，若要顯示中文，請參考下方說明
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(190, 10, "Weekly System Maintenance Report", ln=True, align='C')
-    
-    pdf.set_font("Arial", size=10)
-    pdf.cell(190, 10, "Reported by: Axioma.alpha_V1 | Period: 04/27 - 04/30", ln=True, align='C')
+    # --- 關鍵修正：載入中文字型 ---
+    # 請確保 NotoSansTC-Regular.ttf 檔案在你的 GitHub 根目錄下
+    try:
+        pdf.add_font('NotoSans', '', 'NotoSansTC-Regular.ttf', uni=True)
+        pdf.set_font('NotoSans', size=14)
+    except:
+        # 如果字型檔載入失敗，降級使用 Arial (會導致中文亂碼但不會當機)
+        pdf.set_font("Arial", size=12)
+
+    pdf.cell(190, 10, "Weekly System Maintenance Report (ASCEM)", ln=True, align='C')
     pdf.ln(10)
 
-    # 繪製表格標題
-    pdf.set_fill_color(200, 220, 255)
-    pdf.set_font("Arial", 'B', 10)
-    pdf.cell(20, 10, "Date", 1, 0, 'C', 1)
-    pdf.cell(25, 10, "Domain", 1, 0, 'C', 1)
-    pdf.cell(115, 10, "Details", 1, 0, 'C', 1)
-    pdf.cell(30, 10, "Status", 1, 1, 'C', 1)
+    # 表格標頭
+    pdf.set_font('NotoSans', size=10) if 'NotoSans' in pdf.fonts else pdf.set_font("Arial", 'B', 10)
+    pdf.cell(20, 10, "Date", 1)
+    pdf.cell(25, 10, "Domain", 1)
+    pdf.cell(115, 10, "Details", 1)
+    pdf.cell(30, 10, "Status", 1, 1)
 
-    # 填入內容
-    pdf.set_font("Arial", size=9)
+    # 內容填充
     for index, row in dataframe.iterrows():
-        # 自動換行處理 (Multi-cell)
         pdf.cell(20, 10, str(row['日期']), 1)
         pdf.cell(25, 10, str(row['領域']), 1)
-        pdf.cell(115, 10, str(row['項目與執行細節'])[:60] + "...", 1) # 簡潔處理
+        # 處理中文長字串
+        detail_text = str(row['項目與執行細節'])
+        pdf.cell(115, 10, detail_text[:45] + "..." if len(detail_text) > 45 else detail_text, 1)
         pdf.cell(30, 10, str(row['狀態']), 1, 1)
         
-    return pdf.output(dest='S').encode('latin-1')
-
-# --- 在 Streamlit UI 中加入按鈕 ---
-st.sidebar.divider()
-st.sidebar.subheader("📄 報告導出")
-if st.sidebar.button("產生正式 PDF 報告"):
-    pdf_data = create_pdf(df)
-    b64 = base64.b64encode(pdf_data).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="Weekly_Report_0430.pdf">點此下載 PDF 報告</a>'
-    st.sidebar.markdown(href, unsafe_allow_html=True)
-    st.sidebar.success("報告已準備就緒！")
+    return pdf.output(dest='S').encode('latin-1', 'ignore') # 忽略無法編碼的字元避免當機
