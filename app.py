@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
+from fpdf import FPDF
+import base64
 
 # 1. 網頁基本設定
 st.set_page_config(page_title="ASCEM_IT-工作日誌週報 (2026/04/27–04/30)儀表板", layout="wide", page_icon="🛡️")
@@ -73,3 +75,46 @@ st.info("""
 st.sidebar.title("⏬ 附件調閱")
 st.sidebar.markdown("[附件 1：稽核檢查表](https://docs.google.com/document/d/1lAtn1hm7oiO8cfsK4vQwrjdo0DQaKuvVF_xMVamLJ_g/edit?tab=t.0)")
 st.sidebar.markdown("[附件 2：資安會議資料](https://csirt.its.sinica.edu.tw/projects/ismsarea/files)")
+
+# --- PDF 生成函式 ---
+def create_pdf(dataframe):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # 設定字型 (假設你將字型檔放在專案目錄下，或使用系統路徑)
+    # 這裡先以內建字型示範，若要顯示中文，請參考下方說明
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(190, 10, "Weekly System Maintenance Report", ln=True, align='C')
+    
+    pdf.set_font("Arial", size=10)
+    pdf.cell(190, 10, "Reported by: Axioma.alpha_V1 | Period: 04/27 - 04/30", ln=True, align='C')
+    pdf.ln(10)
+
+    # 繪製表格標題
+    pdf.set_fill_color(200, 220, 255)
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(20, 10, "Date", 1, 0, 'C', 1)
+    pdf.cell(25, 10, "Domain", 1, 0, 'C', 1)
+    pdf.cell(115, 10, "Details", 1, 0, 'C', 1)
+    pdf.cell(30, 10, "Status", 1, 1, 'C', 1)
+
+    # 填入內容
+    pdf.set_font("Arial", size=9)
+    for index, row in dataframe.iterrows():
+        # 自動換行處理 (Multi-cell)
+        pdf.cell(20, 10, str(row['日期']), 1)
+        pdf.cell(25, 10, str(row['領域']), 1)
+        pdf.cell(115, 10, str(row['項目與執行細節'])[:60] + "...", 1) # 簡潔處理
+        pdf.cell(30, 10, str(row['狀態']), 1, 1)
+        
+    return pdf.output(dest='S').encode('latin-1')
+
+# --- 在 Streamlit UI 中加入按鈕 ---
+st.sidebar.divider()
+st.sidebar.subheader("📄 報告導出")
+if st.sidebar.button("產生正式 PDF 報告"):
+    pdf_data = create_pdf(df)
+    b64 = base64.b64encode(pdf_data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="Weekly_Report_0430.pdf">點此下載 PDF 報告</a>'
+    st.sidebar.markdown(href, unsafe_allow_html=True)
+    st.sidebar.success("報告已準備就緒！")
