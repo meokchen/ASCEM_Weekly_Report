@@ -34,14 +34,14 @@ st.divider()
 # 5. 主要表格展示
 st.subheader("📊 系統維運進度追蹤表")
 # 設定表格樣式：將「已完備」上色
-def highlight_status(val):
-    color = '#D4EDDA' if val == '已完備' else '#FFF3CD'
-    return f'background-color: {color}'
-'''
-           st.dataframe(df.style.applymap(highlight_status, subset=['狀態']), 
-            use_container_width=True, 
-            hide_index=True)
-'''
+#def highlight_status(val):
+#    color = '#D4EDDA' if val == '已完備' else '#FFF3CD'
+#    return f'background-color: {color}'
+ #
+ #           st.dataframe(df.style.applymap(highlight_status, subset=['狀態']), 
+ #           use_container_width=True, 
+ #           hide_index=True)
+
 # --- 修正後的表格顯示程式碼 ---
 st.subheader("📊 系統維運進度追蹤表")
 
