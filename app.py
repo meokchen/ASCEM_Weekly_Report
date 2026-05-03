@@ -111,3 +111,12 @@ def create_pdf(dataframe):
         pdf.cell(30, 10, str(row['狀態']), 1, 1)
         
     return pdf.output(dest='S').encode('latin-1', 'ignore') # 忽略無法編碼的字元避免當機
+# --- 在 Streamlit UI 中加入按鈕 ---
+st.sidebar.divider()
+st.sidebar.subheader("📄 報告導出")
+if st.sidebar.button("產生正式 PDF 報告"):
+    pdf_data = create_pdf(df)
+    b64 = base64.b64encode(pdf_data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="Weekly_Report_0430.pdf">點此下載 PDF 報告</a>'
+    st.sidebar.markdown(href, unsafe_allow_html=True)
+    st.sidebar.success("報告已準備就緒！")
