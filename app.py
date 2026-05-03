@@ -32,9 +32,9 @@ c5.metric(label="📦 NAS 總容量 (Log Server)",
 st.divider()
 
 # 5. 主要表格展示
-st.subheader("📊 系統維運進度追蹤表")
+# st.subheader("📊 系統維運進度追蹤表")
 # 設定表格樣式：將「已完備」上色
-#def highlight_status(val):
+# def highlight_status(val):
 #    color = '#D4EDDA' if val == '已完備' else '#FFF3CD'
 #    return f'background-color: {color}'
  #
