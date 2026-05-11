@@ -1,57 +1,68 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
+from datetime import datetime, timedelta
 
-# 1. 頁面配置
-st.set_page_config(page_title="資訊+資安+CyroEM 維運日誌", layout="wide")
+# 1. 頁面配置 
+st.set_page_config(page_title="資訊+資安+CyroEM 維運日誌", layout="wide") [cite: 1]
 
-# 2. 標題與中性專業摘要
-st.title("🛡️ 資訊+資安+CyroEM 系統維運日誌週報")
-st.subheader("統計週期：2026/04/27 ~ 2026/04/30")
+# --- 動態日期計算邏輯 ---
+today = datetime.now()
+# 計算本週週一 (weekday 為 0)
+monday = today - timedelta(days=today.weekday())
+# 計算本週週五
+friday = monday + timedelta(days=4)
+# 格式化為字串
+week_range = f"{monday.strftime('%Y/%m/%d')} ~ {friday.strftime('%Y/%m/%d')}"
 
-# 3. 模擬數據 (未來可改為讀取 GitHub CSV/JSON)
-data = {
-    "日期": ["04/30", "04/30", "04/30", "04/28", "04/28", "04/27", "04/27"],
-    "領域": ["資安防禦", "資安防禦", "資安防禦", "資安防禦", "冷凍電顯", "資訊網管", "冷凍電顯"],
-    "類別": ["合規整備", "政策同步", "情資處置", "軟體補強", "軟體開發", "硬體設備", "實務學習"],
-    "任務描述": [
-        "ISMS 稽核資料準備 (包含 2FA 導入)",
-        "資安重要事項說明會 (法規重點掌握)",
-        "情資通報處置 (DN/IP 黑名單更新)",
-        "CVE-2026-5967/6349 高風險漏洞修補",
-        "CryoSPARC 系統環境優化與腳本精煉",
-        "日誌伺服器建置 (NAS 修復與空間擴充)",
-        "Titan Krios 上機流程初體驗 (Run 1)"
-    ],
-    "狀態": ["推進中", "已完備", "已完備", "已完備", "已完備", "已完備", "推進中"],
-    "備註": ["建議模擬預檢", "-", "-", "-", "擬請核可生產環境部署", "符合院內既定目標", "擬安排進階培訓"]
-}
+# 2. 標題與動態子標題 
+st.title("🛡️ 資訊+資安+CyroEM 系統維運日誌週報") [cite: 1]
+st.subheader(f"統計週期：{week_range}") # 自動更新為本週日期
 
-df = pd.DataFrame(data)
+# 3. 數據讀取邏輯 (Decoupling) 
+CSV_FILE = "work_log.csv"
 
-# 4. 儀表板上方關鍵指標 (Metrics)
-col1, col2, col3 = st.columns(3)
-col1.metric("總任務數", len(df))
-col2.metric("已完備", len(df[df["狀態"] == "已完備"]))
-col3.metric("待主管核可/推進中", len(df[df["狀態"] != "已完備"]))
+def load_local_data():
+    if os.path.exists(CSV_FILE):
+        try:
+            # 支援 Excel 編輯後的中文編碼
+            return pd.read_csv(CSV_FILE, encoding='utf-8-sig')
+        except Exception as e:
+            st.error(f"讀取 CSV 錯誤: {e}")
+            return pd.DataFrame()
+    else:
+        st.error(f"錯誤：找不到本地數據檔 {CSV_FILE}")
+        return pd.DataFrame()
 
-st.divider()
+df = load_local_data()
 
-# 5. 視覺化圖表
-c1, c2 = st.columns(2)
+if not df.empty:
+    # 4. 關鍵指標 (Metrics) [cite: 2]
+    col1, col2, col3 = st.columns(3) [cite: 2]
+    col1.metric("總任務數", len(df)) [cite: 2]
+    col2.metric("已完備", len(df[df["狀態"] == "已完備"])) [cite: 2]
+    col3.metric("推進中", len(df[df["狀態"] != "已完備"])) [cite: 2]
 
-with c1:
-    st.write("### 任務領域分布")
-    fig_pie = px.pie(df, names='領域', hole=0.3, color_discrete_sequence=px.colors.qualitative.Pastel)
-    st.plotly_chart(fig_pie)
+    st.divider() [cite: 2]
 
-with c2:
-    st.write("### 執行進度追蹤")
-    fig_bar = px.bar(df, x='狀態', color='領域', barmode='group')
-    st.plotly_chart(fig_bar)
+    # 5. 視覺化圖表 
+    c1, c2 = st.columns(2) [cite: 2]
 
-# 6. 詳細日誌列表 (中性呈現)
-st.write("### 📅 詳細維運日誌清單")
-st.dataframe(df, use_container_width=True)
+    with c1:
+        st.write("### 任務領域分布") [cite: 2]
+        # 使用 Plotly 圓餅圖呈現領域分布 
+        fig_pie = px.pie(df, names='領域', hole=0.3, color_discrete_sequence=px.colors.qualitative.Pastel) [cite: 2, 3]
+        st.plotly_chart(fig_pie) [cite: 3]
 
-st.info("💡 註：本看板旨在提供透明化管理數據，確保系統維運符合院內資安與科研目標。")
+    with c2:
+        st.write("### 執行進度追蹤") [cite: 3]
+        # 使用 Plotly 長條圖追蹤狀態 [cite: 3]
+        fig_bar = px.bar(df, x='狀態', color='領域', barmode='group') [cite: 3]
+        st.plotly_chart(fig_bar) [cite: 3]
+
+    # 6. 詳細日誌列表 [cite: 3]
+    st.write("### 📅 詳細維運日誌清單") [cite: 3]
+    st.dataframe(df, use_container_width=True, hide_index=True) [cite: 3]
+
+st.info("💡 註：本看板旨在提供透明化管理數據，確保系統維運符合科研目標。") [cite: 3]
