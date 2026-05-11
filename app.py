@@ -1,67 +1,74 @@
 import streamlit as st
 import pandas as pd
 import os
-from fpdf import FPDF
 
 # 1. 頁面配置
-st.set_page_config(page_title="ASCEM 系統維運治理看板", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="ASCEM 系統維運治理儀表板", layout="wide", page_icon="🛡️")
 
-# 2. 標題區
+# 2. 標題與報告人 (已更正)
 st.title("🛡️ 115年度系統維運治理儀表板")
-st.markdown("報告人：**Axioma.alpha_V1** | 數據驅動維運管理")
+st.markdown("報告人：**ASCEM IT 陳新博**") # 根據需求更正
 
-# 3. 數據讀取邏輯 (Decoupling)
+# 3. 強化版數據讀取 (解決編碼報錯並支援動態配置)
 CSV_FILE = "work_log.csv"
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60) # 縮短緩存時間，讓更新更快反映
 def load_data():
     if os.path.exists(CSV_FILE):
         try:
-            # 支援 Excel 編輯過的中文編碼
+            # 優先嘗試 UTF-8 (包含 Excel 的 BOM)
             return pd.read_csv(CSV_FILE, encoding='utf-8-sig')
-        except Exception as e:
-            st.error(f"讀取 CSV 錯誤: {e}")
-            return pd.DataFrame()
-    else:
-        st.warning(f"⚠️ 找不到 {CSV_FILE}，請確保檔案位於根目錄。")
-        return pd.DataFrame()
+        except UnicodeDecodeError:
+            try:
+                # 備案：嘗試台灣常見的 Big5 (cp950)
+                return pd.read_csv(CSV_FILE, encoding='cp950')
+            except:
+                return pd.DataFrame()
+    return pd.DataFrame()
 
-df = load_data()
+df_full = load_data()
 
-# 4. 關鍵指標 (Metrics) - 呈現管理高度
-if not df.empty:
+# --- 4. 動態解析設定 (讓狀態列、重點、附件可編輯) ---
+# 過濾出「維運日誌」本體 (排除標記列)
+if not df_full.empty:
+    log_df = df_full[~df_full['領域'].isin(['管理指標', '重點摘要', '相關連結'])]
+    
+    # 提取「資安稽核」狀態
+    audit_row = df_full[df_full['任務描述'] == '資安稽核']
+    audit_status = audit_row['狀態'].values[0] if not audit_row.empty else "未定"
+    audit_date = audit_row['日期'].values[0] if not audit_row.empty else "05/07"
+
+    # 提取「本週維運重點」
+    summary_rows = df_full[df_full['領域'] == '重點摘要']
+    summary_text = "\n".join([f"- {row['任務描述']}" for _, row in summary_rows.iterrows()]) if not summary_rows.empty else "目前尚無重點摘要。"
+
+    # 5. 狀態列 (Metrics)
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("資安稽核 (05/07)", "預備中", "🔴")
+    c1.metric(f"資安稽核 ({audit_date})", audit_status, "🔴" if "預備" in audit_status else "✅")
     c2.metric("2FA 部署進度", "100%", "✅")
-    c3.metric("本週官網更新", "2 筆", "↑ 參訪/論文")
-    c4.metric("Talos|Titan Storage", "暫存 <70%", "380T ✅")
+    c3.metric("本週官網更新", "2 筆", "↑")
+    c4.metric("NAS 總容量", "16TB", "Log Server")
 
     st.divider()
 
-    # 5. 進度追蹤表 (帶自動上色)
+    # 6. 進度追蹤表
     st.subheader("📊 系統維運進度追蹤表")
-    
     def highlight_status(val):
         return 'background-color: #D4EDDA' if val == '已完備' else 'background-color: #FFF3CD'
-
-    # 使用 map 支援新版 Pandas
-    styled_df = df.style.map(highlight_status, subset=['狀態'])
-    st.dataframe(styled_df, use_container_width=True, hide_index=True)
-
-    # 6. 顧問戰略觀察
-    st.info("""
-    **本週維運重點：**
-    - **資安合規**：2FA 與 VPN 導入完成，NAS 擴充確保稽核日誌完整性。
-    - **科研賦能**：CryoSPARC 環境優化完成，支援 Titan Krios Run 1 數據對接。
-    """)
-
-# 7. 側邊欄：功能與下載
-st.sidebar.title("⏬ 報告與附件")
-st.sidebar.markdown("[附件 1：稽核檢查表](https://docs.google.com/document/d/1lAtn1hm7oiO8cfsK4vQwrjdo0DQaKuvVF_xMVamLJ_g/edit)")
-
-if not df.empty:
-    csv_bytes = df.to_csv(index=False).encode('utf-8-sig')
-    st.sidebar.download_button("下載維運日誌 (CSV)", csv_bytes, "Work_Log.csv", "text/csv")
     
-    if st.sidebar.button("產生預覽 PDF 報告"):
-        st.sidebar.warning("中文 PDF 需載入字型，建議使用瀏覽器列印 (Cmd+P) 另存為 PDF。")
+    st.dataframe(log_df.style.map(highlight_status, subset=['狀態']), use_container_width=True, hide_index=True)
+
+    # 7. 本週維運重點 (可編輯區)
+    st.subheader("🏛️ Daily Monitor | 本週維運重點")
+    st.info(summary_text)
+
+    # 8. 側邊欄：報告與附件 (可編輯區)
+    st.sidebar.title("⏬ 報告與附件")
+    link_rows = df_full[df_full['領域'] == '相關連結']
+    if not link_rows.empty:
+        for _, row in link_rows.iterrows():
+            st.sidebar.markdown(f"[{row['任務描述']}]({row['備註']})")
+    else:
+        st.sidebar.write("尚無附件連結")
+else:
+    st.error("找不到 work_log.csv 或資料格式錯誤")
