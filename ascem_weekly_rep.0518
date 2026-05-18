@@ -1,0 +1,68 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import os
+from datetime import datetime, timedelta
+
+# 1. 頁面配置 
+st.set_page_config(page_title="資訊+資安+CyroEM 維運日誌", layout="wide") [cite: 1]
+
+# --- 動態日期計算邏輯 ---
+today = datetime.now()
+# 計算本週週一 (weekday 為 0)
+monday = today - timedelta(days=today.weekday())
+# 計算本週週五
+friday = monday + timedelta(days=4)
+# 格式化為字串
+week_range = f"{monday.strftime('%Y/%m/%d')} ~ {friday.strftime('%Y/%m/%d')}"
+
+# 2. 標題與動態子標題 
+st.title("🛡️ 資訊+資安+CyroEM 系統維運日誌週報") [cite: 1]
+st.subheader(f"統計週期：{week_range}") # 自動更新為本週日期
+
+# 3. 數據讀取邏輯 (Decoupling) 
+CSV_FILE = "work_log.csv"
+
+def load_local_data():
+    if os.path.exists(CSV_FILE):
+        try:
+            # 支援 Excel 編輯後的中文編碼
+            return pd.read_csv(CSV_FILE, encoding='utf-8-sig')
+        except Exception as e:
+            st.error(f"讀取 CSV 錯誤: {e}")
+            return pd.DataFrame()
+    else:
+        st.error(f"錯誤：找不到本地數據檔 {CSV_FILE}")
+        return pd.DataFrame()
+
+df = load_local_data()
+
+if not df.empty:
+    # 4. 關鍵指標 (Metrics) [cite: 2]
+    col1, col2, col3 = st.columns(3) [cite: 2]
+    col1.metric("總任務數", len(df)) [cite: 2]
+    col2.metric("已完備", len(df[df["狀態"] == "已完備"])) [cite: 2]
+    col3.metric("推進中", len(df[df["狀態"] != "已完備"])) [cite: 2]
+
+    st.divider() [cite: 2]
+
+    # 5. 視覺化圖表 
+    c1, c2 = st.columns(2) [cite: 2]
+
+    with c1:
+        st.write("### 任務領域分布") [cite: 2]
+        # 使用 Plotly 圓餅圖呈現領域分布 
+        fig_pie = px.pie(df, names='領域', hole=0.3, color_discrete_sequence=px.colors.qualitative.Pastel) [cite: 2, 3]
+        st.plotly_chart(fig_pie) [cite: 3]
+
+    with c2:
+        st.write("### 執行進度追蹤") [cite: 3]
+        # 使用 Plotly 長條圖追蹤狀態 [cite: 3]
+        fig_bar = px.bar(df, x='狀態', color='領域', barmode='group') [cite: 3]
+        st.plotly_chart(fig_bar) [cite: 3]
+
+    # 6. 詳細日誌列表 [cite: 3]
+    st.write("### 📅 詳細維運日誌清單") [cite: 3]
+    st.dataframe(df, use_container_width=True, hide_index=True) [cite: 3]
+
+st.info("💡 註：本看板旨在提供透明化管理數據，確保系統維運符合科研目標。") [cite: 3]
