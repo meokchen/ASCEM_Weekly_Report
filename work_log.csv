@@ -1,7 +1,14 @@
 ﻿日期,領域,類別,任務描述,狀態,備註
-5月18日,重點摘要,資安|稽核,【漏洞預警】Ivanti Endpoint Manager(EPM)與Endpoint Manager Mobile(EPMM)存在高風險安全漏洞(CVE-2026-5786、CVE-2026-5787及CVE-2026-8111)，請儘速確認並進行修補,已完備,未使用該項設備/產品
-5月18日,重點摘要,資訊,資訊類清單_Fwd: 請依院方規定進行115年度財產及物品盤點(自即日起至6月30日止),進行中,依院方規定進行115年度財產及物品盤點(自即日起至6月30日止)
-5月20日,管理指標,稽核,【漏洞預警】Palo Alto Networks PAN-OS 存在高風險安全漏洞(CVE-2026-0300)，設施防火牆修補更新完成：版本：11.1.4 h7--->11.1.4.h33,已完備,5/20 排程防火牆更新
-5月21日,相關連結,資安|稽核,資安健診網路架構: 後續追蹤事項 > 設施新防火牆設定的相關截圖佐證！,已完備,防火牆設定的相關截圖佐證https://drive.google.com/file/d/1nYkhKBi9yzJEIsDWwoyBfnfmITSBtcus/view?usp=sharing | 冷凍電顯網路架構佐證0525 https://drive.google.com/file/d/1W8pVVOaZ5UWtOxwno0nZwKpkjbh8FcOe/view?usp=sharing
+5月29日,重點摘要,電顯,GPU運算退化硬體主板測試！,進行中,"使用原廠工具來撈取整台的硬體log資訊, 來分析是否可能是PCIE訊號異常或是其它問題：如顯卡晶片老化｜透過 Supermicro Super Diagnostics Offline，您可以在本機或遠端對目標系統進行診斷。|原廠提供的工具/說明如下google drive
+https://drive.google.com/file/d/11SftMTq2gflt3fGypRIoPh9x7amO9QP6/view?usp=drive_link"
+5月28日,相關連結,資訊,ASCEM 官網更新: 抽換_ASCEM網頁: 常見問題：樣品製備與上機 回答,已完備,https://cryoem.project.sinica.edu.tw/faq/FAQ2-all_CH.pdf
+5月28日,重點摘要,資安|稽核,資安預警情資通報 #13237] (新建立) DN 與 IP 黑名單 (NICST+ACSI-Update_0528,已完備,
+5月28日,重點摘要,資安|稽核,重要通知】請務必按時完成年度資安通識時數，以免影響相關資訊服務使用權限,已完備,轉知「中央研究院資安管理規範」最新修訂。若未於當年度 12/1 前完成資安通識訓練，經本院通知後仍未完成者，將限制使用以下服務（詳情請參閱「實施要點」第七條）：受限服務： 無線網路 (AS_Secure)、AI 助理、AI 逐字稿及 AI API 服務。恢復方式： 待完成訓練要求後，始得恢復權限。其他對象： 當年度接獲社交工程演練開啟通知，且未完成相關補修訓練者，亦比照辦理。
+5月27日,相關連結,資訊,ASCEM 官網更新: 更新與抽換_ASCEM網頁：設施規範 ●人數限制,已完備,https://cryoem.project.sinica.edu.tw/access-C.html
+5月25日,重點摘要,資訊,資訊類清單_Fwd: 請依院方規定進行115年度財產及物品盤點(自即日起至6月30日止),進行中,依院方規定進行115年度財產及物品盤點(自即日起至6月30日止)
 5月22日,相關連結,資訊,ASCEM 官網更新：新增發表一篇: Asymmetric dimeric assembly of Suv3 helicase facilitates processive RNA unwinding.,已完備,https://cryoem.project.sinica.edu.tw/index-C.html 
 5月22日,OFF,OFF,- -,,- -
+5月21日,相關連結,資安|稽核,資安健診網路架構: 後續追蹤事項 > 設施新防火牆設定的相關截圖佐證！,已完備,防火牆設定的相關截圖佐證https://drive.google.com/file/d/1nYkhKBi9yzJEIsDWwoyBfnfmITSBtcus/view?usp=sharing | 冷凍電顯網路架構佐證0525 https://drive.google.com/file/d/1W8pVVOaZ5UWtOxwno0nZwKpkjbh8FcOe/view?usp=sharing
+5月20日,管理指標,稽核,【漏洞預警】Palo Alto Networks PAN-OS 存在高風險安全漏洞(CVE-2026-0300)，設施防火牆修補更新完成：版本：11.1.4 h7--->11.1.4.h33,已完備,5/20 排程防火牆更新
+5月18日,重點摘要,資安|稽核,【漏洞預警】Ivanti Endpoint Manager(EPM)與Endpoint Manager Mobile(EPMM)存在高風險安全漏洞(CVE-2026-5786、CVE-2026-5787及CVE-2026-8111)，請儘速確認並進行修補,已完備,未使用該項設備/產品
+5月18日,重點摘要,資訊,資訊類清單_Fwd: 請依院方規定進行115年度財產及物品盤點(自即日起至6月30日止),進行中,依院方規定進行115年度財產及物品盤點(自即日起至6月30日止)
