@@ -42,7 +42,6 @@ with st.sidebar:
             for file in attachment_files:
                 file_size = round(file.size / 1024, 1)
                 st.caption(f"📄 {file.name} ({file_size} KB)")
-                # 如果是圖片，直接顯示縮圖
                 if file.name.endswith(('.png', '.jpg', '.jpeg')):
                     st.image(file, use_container_width=True)
 
@@ -60,20 +59,19 @@ with st.sidebar:
         if new_url:
             display_name = new_name if new_name else new_url
             st.session_state.custom_links.append({"name": display_name, "url": new_url})
-            st.rerun() # 重新整理畫面顯示新連結
+            st.rerun() 
 
     st.divider()
     st.markdown("**📌 相關連結總覽**")
 
 
 # ==========================================
-# 3. 數據讀取與深度清洗 (支援 CSV / XLSX)
+# 3. 數據讀取與深度清洗
 # ==========================================
 CSV_FILE = "work_log.csv"
 
 @st.cache_data(ttl=2)
 def load_data(files):
-    # 狀況 A：如果使用者有上傳新的數據檔 (CSV/XLSX)，優先讀取
     if files:
         for file in files:
             try:
@@ -90,7 +88,6 @@ def load_data(files):
             except Exception as e:
                 st.sidebar.error(f"讀取數據檔失敗: {e}")
                 
-    # 狀況 B：預設讀取本地端的 work_log.csv
     if os.path.exists(CSV_FILE):
         for enc in ['utf-8-sig', 'cp950', 'big5']:
             try:
@@ -102,10 +99,9 @@ def load_data(files):
                 continue
     return pd.DataFrame()
 
-# 執行資料讀取 (只傳入 CSV/XLSX 檔案)
 df_full = load_data(data_files)
 
-# --- 動態抓取完整週期 ---
+# 動態抓取完整週期
 if not df_full.empty:
     valid_dates = [d for d in df_full['日期'].tolist() if d and "月" in str(d) and "日" in str(d)]
     if len(valid_dates) >= 1:
@@ -128,29 +124,28 @@ st.title("🛡️ ASCEM-IT 工作日誌週報儀表板")
 st.markdown(f"報告人：**ASCEM IT 陳新博** | 統計週期：**{week_range}**")
 
 if not df_full.empty:
-    # 【自動相容關鍵修正】自動偵測目前的備註欄位名稱是什麼
     remark_col_name = '備註|建議事項' if '備註|建議事項' in df_full.columns else '備註'
 
-    # A. 稽核狀態：鎖定 5月7日
-    audit_row = df_full[(df_full['任務描述'].str.contains('稽核', na=False)) & (df_full['日期'].str.contains('5月7日', na=False))]
-    audit_status = audit_row['狀態'].values[0] if not audit_row.empty else "已結束"
+    # ==========================================
+    # 【重點修改區塊】：動態計算本週資安/稽核筆數
+    # ==========================================
+    # 判斷「類別」或「任務描述」中是否包含「資安」或「稽核」字眼
+    is_audit = df_full['類別'].str.contains('資安|稽核', na=False) | df_full['任務描述'].str.contains('資安|稽核', na=False)
+    audit_count = len(df_full[is_audit])
 
-    # B. 獨立提取：相關連結與重點摘要
+    # 獨立提取：相關連結與重點摘要
     link_df = df_full[df_full['領域'].str.contains('連結', na=False)]
     summary_df = df_full[df_full['領域'].str.contains('重點', na=False)]
 
     # --- 整合並顯示所有連結於左側面板 ---
     with st.sidebar:
         has_links = False
-        # 1. 顯示手動新增的連結
         for link in st.session_state.custom_links:
             st.markdown(f"🔗 [{link['name']}]({link['url']})")
             has_links = True
             
-        # 2. 顯示 CSV / XLSX 內設定的連結
         if not link_df.empty:
             for _, row in link_df.iterrows():
-                # 安全讀取動態名稱的備註欄位
                 cell_value = str(row.get(remark_col_name, ''))
                 if "http" in cell_value:
                     st.markdown(f"🔗 [{row['任務描述']}]({cell_value})")
@@ -161,7 +156,10 @@ if not df_full.empty:
 
     # 狀態列 (Metrics)
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric(f"資安稽核 (5月7日)", audit_status, delta="✅" if "結束" in audit_status else None)
+    
+    # 這裡將標題改為「本週資安稽核」，並帶入動態算出的筆數
+    c1.metric("本週資安稽核", f"{audit_count} 筆", delta="↑" if audit_count > 0 else None)
+    
     c2.metric("2FA 部署進度", "100%", "✅")
     c3.metric("本週官網更新", "2 筆", "↑")
     c4.metric("Storage: Titan/Talos", "380T < 70% 佔用", "✅ 正常")
@@ -177,7 +175,6 @@ if not df_full.empty:
         if val == '進行中': return 'background-color: #FFF3CD'
         return ''
 
-    # 動態套用欄位清單（自動選擇 '備註' 或 '備註|建議事項'）
     display_cols = ["日期", "領域", "類別", "任務描述", "狀態", remark_col_name]
     st.dataframe(
         df_full[display_cols].style.map(highlight_status, subset=['狀態']),
