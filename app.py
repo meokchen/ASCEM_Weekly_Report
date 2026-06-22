@@ -44,7 +44,7 @@ with st.sidebar:
                 st.caption(f"📄 {file.name} ({file_size} KB)")
                 # 如果是圖片，直接顯示縮圖
                 if file.name.endswith(('.png', '.jpg', '.jpeg')):
-                    st.image(file, use_column_width=True)
+                    st.image(file, use_container_width=True)
 
     st.divider()
     
@@ -64,11 +64,10 @@ with st.sidebar:
 
     st.divider()
     st.markdown("**📌 相關連結總覽**")
-    # (從 CSV 抓取的連結將會在下方資料讀取完成後，補充顯示於此)
 
 
 # ==========================================
-# 3. 數據讀取與深度清洗 (僅針對 CSV/XLSX)
+# 3. 數據讀取與深度清洗 (支援 CSV / XLSX)
 # ==========================================
 CSV_FILE = "work_log.csv"
 
@@ -106,7 +105,7 @@ def load_data(files):
 # 執行資料讀取 (只傳入 CSV/XLSX 檔案)
 df_full = load_data(data_files)
 
-# 動態抓取完整週期
+# --- 動態抓取完整週期 ---
 if not df_full.empty:
     valid_dates = [d for d in df_full['日期'].tolist() if d and "月" in str(d) and "日" in str(d)]
     if len(valid_dates) >= 1:
@@ -121,6 +120,7 @@ if not df_full.empty:
 else:
     week_range = "讀取中"
 
+
 # ==========================================
 # 4. 主視覺區：標題與中間區週報模式
 # ==========================================
@@ -128,6 +128,9 @@ st.title("🛡️ ASCEM-IT 工作日誌週報儀表板")
 st.markdown(f"報告人：**ASCEM IT 陳新博** | 統計週期：**{week_range}**")
 
 if not df_full.empty:
+    # 【自動相容關鍵修正】自動偵測目前的備註欄位名稱是什麼
+    remark_col_name = '備註|建議事項' if '備註|建議事項' in df_full.columns else '備註'
+
     # A. 稽核狀態：鎖定 5月7日
     audit_row = df_full[(df_full['任務描述'].str.contains('稽核', na=False)) & (df_full['日期'].str.contains('5月7日', na=False))]
     audit_status = audit_row['狀態'].values[0] if not audit_row.empty else "已結束"
@@ -144,11 +147,13 @@ if not df_full.empty:
             st.markdown(f"🔗 [{link['name']}]({link['url']})")
             has_links = True
             
-        # 2. 顯示 CSV 內的連結
+        # 2. 顯示 CSV / XLSX 內設定的連結
         if not link_df.empty:
             for _, row in link_df.iterrows():
-                if "http" in str(row['備註']):
-                    st.markdown(f"🔗 [{row['任務描述']}]({row['備註']})")
+                # 安全讀取動態名稱的備註欄位
+                cell_value = str(row.get(remark_col_name, ''))
+                if "http" in cell_value:
+                    st.markdown(f"🔗 [{row['任務描述']}]({cell_value})")
                     has_links = True
                     
         if not has_links:
@@ -172,7 +177,8 @@ if not df_full.empty:
         if val == '進行中': return 'background-color: #FFF3CD'
         return ''
 
-    display_cols = ["日期", "領域", "類別", "任務描述", "狀態", "備註"]
+    # 動態套用欄位清單（自動選擇 '備註' 或 '備註|建議事項'）
+    display_cols = ["日期", "領域", "類別", "任務描述", "狀態", remark_col_name]
     st.dataframe(
         df_full[display_cols].style.map(highlight_status, subset=['狀態']),
         use_container_width=True,
@@ -185,7 +191,7 @@ if not df_full.empty:
         for _, row in summary_df.iterrows():
             st.write(f"· {row['任務描述']}")
     else:
-        st.write("目前尚未在 CSV 中標註重點摘要。")
+        st.write("目前尚未在數據中標註重點摘要。")
 
 else:
     st.error("目前讀取不到任何資料，請檢查伺服器上的檔案，或利用左側面板上傳新的工作日誌。")
