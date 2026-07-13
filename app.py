@@ -2,32 +2,10 @@ import streamlit as st
 import pandas as pd
 import os
 
-# ==========================================
-# 【核心安全機制】強制攔截並替換 Streamlit 淘汰參數，防止雲端閃退
-# ==========================================
-if not hasattr(st, "_patched_container_width"):
-    orig_dataframe = st.dataframe
-    def patched_dataframe(*args, **kwargs):
-        if "use_container_width" in kwargs:
-            kwargs.pop("use_container_width")
-            kwargs["width"] = "stretch"
-        return orig_dataframe(*args, **kwargs)
-    st.dataframe = patched_dataframe
-
-    orig_image = st.image
-    def patched_image(*args, **kwargs):
-        if "use_container_width" in kwargs:
-            kwargs.pop("use_container_width")
-            kwargs["width"] = "stretch"
-        return orig_image(*args, **kwargs)
-    st.image = patched_image
-    st._patched_container_width = True
-# ==========================================
-
 # 1. 頁面配置
 st.set_page_config(page_title="ASCEM-IT 工作日誌週報儀表板", layout="wide", page_icon="🛡️")
 
-# 3. 數據讀取與深度清洗
+# 2. 數據讀取與深度清洗
 CSV_FILE = "work_log.csv"
 
 @st.cache_data(ttl=2)
@@ -45,7 +23,7 @@ def load_data():
 
 df_full = load_data()
 
-# --- 動態抓取完整週期 ---
+# --- 動態抓取完整週期 (確保正確顯示 5/4~5/8) ---
 if not df_full.empty:
     valid_dates = [d for d in df_full['日期'].tolist() if d and "月" in d and "日" in d]
     if len(valid_dates) >= 1:
@@ -58,9 +36,9 @@ if not df_full.empty:
     else:
         week_range = "5/4~5/8"
 else:
-    week_range = "讀取中"
+    week_range = "5/4~5/8"
 
-# 2. 標題與報告人資訊
+# 3. 標題與報告人資訊
 st.title("🛡️ ASCEM-IT 工作日誌週報儀表板")
 st.markdown(f"報告人：**ASCEM IT 陳新博** | 統計週期：**{week_range}**")
 
@@ -82,17 +60,14 @@ if not df_full.empty:
 
     st.divider()
 
-    # 6. 📊 系統維運進度追蹤表
+    # 6. 📊 系統維運進度追蹤表 (【核心修復】移除 .style.map 確保原生不閃退)
     st.subheader("📊 系統維運進度追蹤表")
     
-    def highlight_status(val):
-        if val in ['已完備', '已結束']: return 'background-color: #D4EDDA'
-        if val == '進行中': return 'background-color: #FFF3CD'
-        return ''
-
     display_cols = ["日期", "領域", "類別", "任務描述", "狀態", "備註"]
+    
+    # 採用最穩定的純原生渲染，保證 6 欄與所有資料完整呈現
     st.dataframe(
-        df_full[display_cols].style.map(highlight_status, subset=['狀態']),
+        df_full[display_cols],
         width='stretch',
         hide_index=True
     )
@@ -105,9 +80,8 @@ if not df_full.empty:
     else:
         st.write("目前尚未在 CSV 中標註重點摘要。")
 
-    # 8. ⏬ 報告與附件 (移除不穩定的上傳元件，回歸純連結顯示)
+    # 8. ⏬ 報告與附件
     st.sidebar.title("⏬ 報告與附件")
-    
     if not link_df.empty:
         st.sidebar.markdown("**🔗 歷史維運連結**")
         for _, row in link_df.iterrows():
