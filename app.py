@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # ==========================================
-# 【終極修正】強制覆蓋 Streamlit 底層過期參數，防止雲端伺服器閃退
+# 【核心安全機制】強制攔截並替換 Streamlit 淘汰參數，防止雲端閃退
 # ==========================================
 if not hasattr(st, "_patched_container_width"):
     orig_dataframe = st.dataframe
@@ -108,16 +108,18 @@ if not df_full.empty:
     # 8. ⏬ 報告與附件
     st.sidebar.title("⏬ 報告與附件")
     
+    # 【關鍵修復】：確保安全檢查，防止 NameError 閃退
     if 'uploaded_files' in locals() or 'uploaded_files' in globals():
-        st.success(f"✅ 已載入 {len(uploaded_files)} 個檔案")
-        if attachment_files:
-            st.markdown("---")
-            st.markdown("**📎 參考附件預覽**")
-            for file in attachment_files:
-                file_size = round(file.size / 1024, 1)
-                st.caption(f"📄 {file.name} ({file_size} KB)")
-                if file.name.endswith(('.png', '.jpg', '.jpeg')):
-                    st.image(file, width='stretch')
+        if 'attachment_files' in locals() or 'attachment_files' in globals():
+            st.success(f"✅ 已載入 {len(uploaded_files)} 個檔案")
+            if attachment_files:
+                st.markdown("---")
+                st.markdown("**📎 參考附件預覽**")
+                for file in attachment_files:
+                    file_size = round(file.size / 1024, 1)
+                    st.caption(f"📄 {file.name} ({file_size} KB)")
+                    if file.name.endswith(('.png', '.jpg', '.jpeg')):
+                        st.image(file, width='stretch')
 
     if not link_df.empty:
         st.sidebar.markdown("---")
