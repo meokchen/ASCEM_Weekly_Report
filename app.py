@@ -105,40 +105,16 @@ if not df_full.empty:
     else:
         st.write("目前尚未在 CSV 中標註重點摘要。")
 
-    # 8. ⏬ 報告與附件
+    # 8. ⏬ 報告與附件 (移除不穩定的上傳元件，回歸純連結顯示)
     st.sidebar.title("⏬ 報告與附件")
     
-    # 【關鍵修復】：確保安全檢查，防止 NameError 閃退
-    if 'uploaded_files' in locals() or 'uploaded_files' in globals():
-        if 'attachment_files' in locals() or 'attachment_files' in globals():
-            st.success(f"✅ 已載入 {len(uploaded_files)} 個檔案")
-            if attachment_files:
-                st.markdown("---")
-                st.markdown("**📎 參考附件預覽**")
-                for file in attachment_files:
-                    file_size = round(file.size / 1024, 1)
-                    st.caption(f"📄 {file.name} ({file_size} KB)")
-                    if file.name.endswith(('.png', '.jpg', '.jpeg')):
-                        st.image(file, width='stretch')
-
     if not link_df.empty:
-        st.sidebar.markdown("---")
         st.sidebar.markdown("**🔗 歷史維運連結**")
         for _, row in link_df.iterrows():
             if "http" in str(row['備註']):
                 st.sidebar.markdown(f"[{row['任務描述']}]({row['備註']})")
     else:
         st.sidebar.write("尚無附件連結")
-
-    st.divider()
-
-    # 動態新增連結區
-    st.markdown("**🔗 新增專案連結**")
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        new_url = st.text_input("貼上 URL 網址", placeholder="https://...", label_visibility="collapsed")
-    with col2:
-        new_name = st.text_input("顯示名稱", placeholder="自訂名稱", label_visibility="collapsed")
 
 else:
     st.error("讀取資料失敗，請確認 work_log.csv 是否存在。")
