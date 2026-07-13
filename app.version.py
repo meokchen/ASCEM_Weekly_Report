@@ -177,10 +177,11 @@ if not df_full.empty:
 
     display_cols = ["日期", "領域", "類別", "任務描述", "狀態", remark_col_name]
     st.dataframe(
-    df_full[display_cols].style.map(highlight_status, subset=['狀態']),
-    width='stretch',  # 修正：改用新版 stretch 填滿寬度參數
-    hide_index=True
+        df_full[display_cols].style.map(highlight_status, subset=['狀態']),
+        use_container_width=True,
+        hide_index=True
     )
+
     # 🏛️ Daily Monitor | 本週維運重點
     st.subheader("🏛️ Daily Monitor | 本週維運重點")
     if not summary_df.empty:
